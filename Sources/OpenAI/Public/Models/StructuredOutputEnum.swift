@@ -7,6 +7,6 @@
 
 import Foundation
 
-public protocol StructuredOutputEnum: CaseIterable {
+public protocol StructuredOutputEnum: Codable, CaseIterable {
     var caseNames: [String] { get }
 }

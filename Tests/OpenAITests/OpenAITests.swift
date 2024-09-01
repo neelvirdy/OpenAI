@@ -8,7 +8,7 @@
 import XCTest
 @testable import OpenAI
 
-@available(iOS 13.0, *)
+@available(iOS 16.0, *)
 @available(watchOS 6.0, *)
 @available(tvOS 13.0, *)
 class OpenAITests: XCTestCase {
@@ -137,7 +137,48 @@ class OpenAITests: XCTestCase {
         let result = try await openAI.chats(query: query)
         XCTAssertEqual(result, chatResult)
     }
-    
+
+    struct MovieInfo: StructuredOutput {
+        let title: String
+        let director: String
+        let release: Date
+        let genres: [MovieGenre]
+        let cast: [String]
+
+        static let example: Self = {
+            .init(
+                title: "Earth",
+                director: "Alexander Dovzhenko",
+                release: Calendar.current.date(from: DateComponents(year: 1930, month: 4, day: 8))!,
+                genres: [.drama],
+                cast: [ "Stepan Shkurat", "Semyon Svashenko", "Yuliya Solntseva" ]
+            )
+        }()
+
+        enum MovieGenre: String, Codable, StructuredOutputEnum {
+            case action, drama, comedy, scifi
+
+            var caseNames: [String] { Self.allCases.map { $0.rawValue } }
+        }
+    }
+
+    func testChatsStructuredOutput() async throws {
+        let query = ChatQuery(
+            messages: [.system(.init(content: "Respond with the movie info for Earth"))],
+            model: .gpt4_o_2024_08_06,
+            responseFormat: .jsonSchema(name: "movie-info", type: MovieInfo.self)
+        )
+        let chatResult = ChatResult(id: "id-12312", object: "foo", created: 100, model: .gpt3_5Turbo, choices: [
+         .init(index: 0, logprobs: nil, message: .system(.init(content: "bar")), finishReason: "baz"),
+         .init(index: 0, logprobs: nil, message: .user(.init(content: .string("bar1"))), finishReason: "baz1"),
+         .init(index: 0, logprobs: nil, message: .assistant(.init(content: "bar2")), finishReason: "baz2")
+         ], usage: .init(completionTokens: 200, promptTokens: 100, totalTokens: 300), systemFingerprint: nil)
+        try self.stub(result: chatResult)
+
+        let result = try await openAI.chats(query: query)
+        XCTAssertEqual(result, chatResult)
+    }
+
     func testChatsError() async throws {
         let query = ChatQuery(messages: [
             .system(.init(content: "You are Librarian-GPT. You know everything about the books.")),
@@ -404,7 +445,7 @@ class OpenAITests: XCTestCase {
 }
 
 @available(tvOS 13.0, *)
-@available(iOS 13.0, *)
+@available(iOS 16.0, *)
 @available(watchOS 6.0, *)
 extension OpenAITests {
     
@@ -423,7 +464,7 @@ extension OpenAITests {
 }
 
 @available(tvOS 13.0, *)
-@available(iOS 13.0, *)
+@available(iOS 16.0, *)
 @available(watchOS 6.0, *)
 extension OpenAITests {
     

@@ -754,7 +754,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                 }
                 try container.encode(false, forKey: .additionalProperties)
                 try container.encode(object, forKey: .properties)
-                let fields = try object.map { key, value in key }
+                let fields = object.map { key, value in key }
                 try container.encode(fields, forKey: .required)
             case .array(let items, let isOptional):
                 if isOptional {
@@ -983,6 +983,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
 
                     public let type: Self.JSONType
                     public let description: String?
+                    public let properties: [String: Property]?
                     public let format: String?
                     public let items: Self.Items?
                     public let required: [String]?
@@ -995,10 +996,12 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                     public let minItems: Int?
                     public let maxItems: Int?
                     public let uniqueItems: Bool?
+                    public let additionalProperties: Bool?
 
                     public init(
                         type: Self.JSONType,
                         description: String? = nil,
+                        properties: [String: Property]? = nil,
                         format: String? = nil,
                         items: Self.Items? = nil,
                         required: [String]? = nil,
@@ -1010,10 +1013,12 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                         maximum: Double? = nil,
                         minItems: Int? = nil,
                         maxItems: Int? = nil,
-                        uniqueItems: Bool? = nil
+                        uniqueItems: Bool? = nil,
+                        additionalProperties: Bool? = nil
                     ) {
                         self.type = type
                         self.description = description
+                        self.properties = properties
                         self.format = format
                         self.items = items
                         self.required = required
@@ -1026,6 +1031,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                         self.minItems = minItems
                         self.maxItems = maxItems
                         self.uniqueItems = uniqueItems
+                        self.additionalProperties = additionalProperties
                     }
 
                     public struct Items: Codable, Equatable {
@@ -1033,6 +1039,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
 
                         public let type: Self.JSONType
                         public let properties: [String: Property]?
+                        public let required: [String]?
                         public let pattern: String?
                         public let const: String?
                         public let `enum`: [String]?
@@ -1042,10 +1049,12 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                         public let minItems: Int?
                         public let maxItems: Int?
                         public let uniqueItems: Bool?
+                        public let additionalProperties: Bool?
 
                         public init(
                             type: Self.JSONType,
                             properties: [String : Property]? = nil,
+                            required: [String]? = nil,
                             pattern: String? = nil,
                             const: String? = nil,
                             `enum`: [String]? = nil,
@@ -1054,10 +1063,12 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                             maximum: Double? = nil,
                             minItems: Int? = nil,
                             maxItems: Int? = nil,
-                            uniqueItems: Bool? = nil
+                            uniqueItems: Bool? = nil,
+                            additionalProperties: Bool? = nil
                         ) {
                             self.type = type
                             self.properties = properties
+                            self.required = required
                             self.pattern = pattern
                             self.const = const
                             self.`enum` = `enum`
@@ -1067,6 +1078,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                             self.minItems = minItems
                             self.maxItems = maxItems
                             self.uniqueItems = uniqueItems
+                            self.additionalProperties = additionalProperties
                         }
                     }
                 }

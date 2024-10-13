@@ -33,8 +33,11 @@ extension JSONRequest: URLRequestBuildable {
             request.setValue(organizationIdentifier, forHTTPHeaderField: "OpenAI-Organization")
         }
         request.httpMethod = method
-        if let body = body {
-            request.httpBody = try JSONEncoder().encode(body)
+        if let body {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .sortedKeys
+            let encoded = try encoder.encode(body)
+            request.httpBody = encoded
         }
         return request
     }

@@ -622,8 +622,8 @@ public struct ChatQuery: Equatable, Codable, Streamable {
         
         case text
         case jsonObject
-        case jsonSchema(name: String, type: StructuredOutput.Type)
-        
+        case jsonSchema(name: String, schema: ChatQuery.ChatCompletionToolParam.FunctionDefinition.FunctionParameters.Property, strict: Bool)
+
         enum CodingKeys: String, CodingKey {
             case type
             case jsonSchema = "json_schema"
@@ -636,9 +636,9 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                 try container.encode("text", forKey: .type)
             case .jsonObject:
                 try container.encode("json_object", forKey: .type)
-            case .jsonSchema(let name, let type):
+            case .jsonSchema(let name, let schema, let strict):
                 try container.encode("json_schema", forKey: .type)
-                let schema = JSONSchema(name: name, schema: type.example)
+                let schema = JSONSchema(name: name, schema: schema, strict: strict)
                 try container.encode(schema, forKey: .jsonSchema)
             }
         }
@@ -647,8 +647,8 @@ public struct ChatQuery: Equatable, Codable, Streamable {
             switch (lhs, rhs) {
             case (.text, .text): return true
             case (.jsonObject, .jsonObject): return true
-            case (.jsonSchema(let lhsName, let lhsType), .jsonSchema(let rhsName, let rhsType)):
-                return lhsName == rhsName && lhsType == rhsType
+            case (.jsonSchema(let lhsName, let lhsType, let lhsStrict), .jsonSchema(let rhsName, let rhsType, let rhsStrict)):
+                return lhsName == rhsName && lhsType == rhsType && lhsStrict == rhsStrict
             default:
                 return false
             }
@@ -664,199 +664,26 @@ public struct ChatQuery: Equatable, Codable, Streamable {
     private struct JSONSchema: Encodable {
         
         let name: String
-        let schema: StructuredOutput
-        
+        let schema: ChatQuery.ChatCompletionToolParam.FunctionDefinition.FunctionParameters.Property
+        let strict: Bool
+
         enum CodingKeys: String, CodingKey {
             case name
             case schema
             case strict
         }
-        
-        init(name: String, schema: StructuredOutput) {
-            
-            func format(_ name: String) -> String {
-                var formattedName = name.replacingOccurrences(of: " ", with: "_")
-                let regex = try! NSRegularExpression(pattern: "[^a-zA-Z0-9_-]", options: [])
-                let range = NSRange(location: 0, length: formattedName.utf16.count)
-                formattedName = regex.stringByReplacingMatches(in: formattedName, options: [], range: range, withTemplate: "")
-                formattedName = formattedName.isEmpty ? "sample" : formattedName
-                formattedName = String(formattedName.prefix(64))
-                return formattedName
-            }
-            
-            self.name = format(name)
+
+        init(name: String, schema: ChatQuery.ChatCompletionToolParam.FunctionDefinition.FunctionParameters.Property, strict: Bool) {
+            self.name = name
             self.schema = schema
-            
-            if self.name != name {
-                print("The name was changed to \(self.name) to satisfy the API requirements. See more: https://platform.openai.com/docs/api-reference/chat/create")
-            }
+            self.strict = strict
         }
         
         public func encode(to encoder: any Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(name, forKey: .name)
-            try container.encode(true, forKey: .strict)
-            try container.encode(try PropertyValue(from: schema), forKey: .schema)
-        }
-    }
-    
-    private indirect enum PropertyValue: Codable {
-        
-        enum SimpleType: String, Codable {
-            case string, integer, number, boolean
-        }
-        
-        enum ComplexType: String, Codable {
-            case object, array, date
-        }
-        
-        enum SpecialType: String, Codable {
-            case null
-        }
-        
-        case simple(SimpleType, isOptional: Bool)
-        case date(isOptional: Bool)
-        case `enum`(cases: [String], isOptional: Bool)
-        case object([String: PropertyValue], isOptional: Bool)
-        case array(PropertyValue, isOptional: Bool)
-        
-        enum CodingKeys: String, CodingKey {
-            case type
-            case description
-            case properties
-            case items
-            case additionalProperties
-            case required
-            case `enum`
-        }
-        
-        enum ValueType: String, Codable {
-            case string
-            case date
-            case integer
-            case number
-            case boolean
-            case object
-            case array
-        }
-        
-        func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            
-            switch self {
-            case .simple(let type, let isOptional):
-                if isOptional {
-                    try container.encode([type.rawValue, SpecialType.null.rawValue], forKey: .type)
-                } else {
-                    try container.encode(type.rawValue, forKey: .type)
-                }
-            case .date(let isOptional):
-                if isOptional {
-                    try container.encode([SimpleType.string.rawValue, SpecialType.null.rawValue], forKey: .type)
-                } else {
-                    try container.encode(SimpleType.string.rawValue, forKey: .type)
-                }
-                try container.encode("String that represents a date formatted in iso8601", forKey: .description)
-            case .enum(let cases, let isOptional):
-                if isOptional {
-                    try container.encode([SimpleType.string.rawValue, SpecialType.null.rawValue], forKey: .type)
-                } else {
-                    try container.encode(SimpleType.string.rawValue, forKey: .type)
-                }
-                try container.encode(cases, forKey: .enum)
-            case .object(let object, let isOptional):
-                if isOptional {
-                    try container.encode([ComplexType.object.rawValue, SpecialType.null.rawValue], forKey: .type)
-                } else {
-                    try container.encode(ComplexType.object.rawValue, forKey: .type)
-                }
-                try container.encode(false, forKey: .additionalProperties)
-                try container.encode(object, forKey: .properties)
-                let fields = object.map { key, value in key }
-                try container.encode(fields, forKey: .required)
-            case .array(let items, let isOptional):
-                if isOptional {
-                    try container.encode([ComplexType.array.rawValue, SpecialType.null.rawValue], forKey: .type)
-                } else {
-                    try container.encode(ComplexType.array.rawValue, forKey: .type)
-                }
-                try container.encode(items, forKey: .items)
-            }
-        }
-        
-        init<T: Any>(from value: T) throws {
-            let mirror = Mirror(reflecting: value)
-            let isOptional = mirror.displayStyle == .optional
-            
-            switch value {
-            case _ as String:
-                self = .simple(.string, isOptional: isOptional)
-                return
-            case _ as Bool:
-                self = .simple(.boolean, isOptional: isOptional)
-                return
-            case _ as Int, _ as Int8, _ as Int16, _ as Int32, _ as Int64, _ as UInt, _ as UInt8, _ as UInt16, _ as UInt32, _ as UInt64:
-                self = .simple(.integer, isOptional: isOptional)
-                return
-            case _ as Double, _ as Float, _ as CGFloat:
-                self = .simple(.number, isOptional: isOptional)
-                return
-            case _ as Date:
-                self = .date(isOptional: isOptional)
-                return
-            default:
-                
-                var unwrappedMirror: Mirror!
-                if isOptional {
-                    guard let child = mirror.children.first else {
-                        throw StructuredOutputError.nilFoundInExample
-                    }
-                    unwrappedMirror = Mirror(reflecting: child.value)
-                } else {
-                    unwrappedMirror = mirror
-                }
-                
-                if let displayStyle = unwrappedMirror.displayStyle {
-                    
-                    switch displayStyle {
-                        
-                    case .struct, .class:
-                        var dict = [String: PropertyValue]()
-                        for child in unwrappedMirror.children {
-                            dict[child.label!] = try Self(from: child.value)
-                        }
-                        self = .object(dict, isOptional: isOptional)
-                        return
-                        
-                    case .collection:
-                        if let child = unwrappedMirror.children.first {
-                            self = .array(try Self(from: child.value), isOptional: isOptional)
-                            return
-                        } else {
-                            throw StructuredOutputError.typeUnsupported
-                        }
-                        
-                    case .enum:
-                        if let structuredEnum = value as? any StructuredOutputEnum {
-                            self = .enum(cases: structuredEnum.caseNames, isOptional: isOptional)
-                            return
-                        } else {
-                            throw StructuredOutputError.enumsConformance
-                        }
-                        
-                    default:
-                        throw StructuredOutputError.typeUnsupported
-                    }
-                }
-                throw StructuredOutputError.typeUnsupported
-            }
-        }
-        
-        
-        /// A formal initializer reqluired for the inherited Decodable conformance.
-        /// This type is never returned from the server and is never decoded into.
-        init(from decoder: Decoder) throws {
-            self = .simple(.boolean, isOptional: false)
+            try container.encode(strict, forKey: .strict)
+            try container.encode(schema, forKey: .schema)
         }
     }
     
@@ -996,14 +823,33 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                     self.additionalProperties = additionalProperties
                 }
 
-                public struct Property: Codable, Equatable {
+                public class Property: Codable, Equatable {
+                    public static func == (lhs: ChatQuery.ChatCompletionToolParam.FunctionDefinition.FunctionParameters.Property, rhs: ChatQuery.ChatCompletionToolParam.FunctionDefinition.FunctionParameters.Property) -> Bool {
+                        return lhs.type == rhs.type &&
+                               lhs.description == rhs.description &&
+                               lhs.properties == rhs.properties &&
+                               lhs.format == rhs.format &&
+                               lhs.items == rhs.items &&
+                               lhs.required == rhs.required &&
+                               lhs.pattern == rhs.pattern &&
+                               lhs.const == rhs.const &&
+                               lhs.enum == rhs.enum &&
+                               lhs.multipleOf == rhs.multipleOf &&
+                               lhs.minimum == rhs.minimum &&
+                               lhs.maximum == rhs.maximum &&
+                               lhs.minItems == rhs.minItems &&
+                               lhs.maxItems == rhs.maxItems &&
+                               lhs.uniqueItems == rhs.uniqueItems &&
+                               lhs.additionalProperties == rhs.additionalProperties
+                    }
+                    
                     public typealias JSONType = ChatQuery.ChatCompletionToolParam.FunctionDefinition.FunctionParameters.JSONType
 
-                    public let type: Self.JSONType
+                    public let type: JSONType
                     public let description: String?
                     public let properties: [String: Property]?
                     public let format: String?
-                    public let items: Self.Items?
+                    public let items: Property?
                     public let required: [String]?
                     public let pattern: String?
                     public let const: String?
@@ -1017,11 +863,11 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                     public let additionalProperties: Bool?
 
                     public init(
-                        type: Self.JSONType,
+                        type: JSONType,
                         description: String? = nil,
                         properties: [String: Property]? = nil,
                         format: String? = nil,
-                        items: Self.Items? = nil,
+                        items: Property? = nil,
                         required: [String]? = nil,
                         pattern: String? = nil,
                         const: String? = nil,
@@ -1050,54 +896,6 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                         self.maxItems = maxItems
                         self.uniqueItems = uniqueItems
                         self.additionalProperties = additionalProperties
-                    }
-
-                    public struct Items: Codable, Equatable {
-                        public typealias JSONType = ChatQuery.ChatCompletionToolParam.FunctionDefinition.FunctionParameters.JSONType
-
-                        public let type: Self.JSONType
-                        public let properties: [String: Property]?
-                        public let required: [String]?
-                        public let pattern: String?
-                        public let const: String?
-                        public let `enum`: [String]?
-                        public let multipleOf: Int?
-                        public let minimum: Double?
-                        public let maximum: Double?
-                        public let minItems: Int?
-                        public let maxItems: Int?
-                        public let uniqueItems: Bool?
-                        public let additionalProperties: Bool?
-
-                        public init(
-                            type: Self.JSONType,
-                            properties: [String : Property]? = nil,
-                            required: [String]? = nil,
-                            pattern: String? = nil,
-                            const: String? = nil,
-                            `enum`: [String]? = nil,
-                            multipleOf: Int? = nil,
-                            minimum: Double? = nil,
-                            maximum: Double? = nil,
-                            minItems: Int? = nil,
-                            maxItems: Int? = nil,
-                            uniqueItems: Bool? = nil,
-                            additionalProperties: Bool? = nil
-                        ) {
-                            self.type = type
-                            self.properties = properties
-                            self.required = required
-                            self.pattern = pattern
-                            self.const = const
-                            self.`enum` = `enum`
-                            self.multipleOf = multipleOf
-                            self.minimum = minimum
-                            self.maximum = maximum
-                            self.minItems = minItems
-                            self.maxItems = maxItems
-                            self.uniqueItems = uniqueItems
-                            self.additionalProperties = additionalProperties
-                        }
                     }
                 }
 

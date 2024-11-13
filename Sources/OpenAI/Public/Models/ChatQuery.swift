@@ -71,6 +71,10 @@ public struct ChatQuery: Equatable, Codable, Streamable {
     /// Official doc:
     /// https://cookbook.openai.com/examples/how_to_stream_completions#4-how-to-get-token-usage-data-for-streamed-chat-completion-response
     public let streamOptions: Self.StreamOptions?
+    /// Whether or not to store the output of this chat completion request for use in model distillation or evals.
+    public let store: Bool?
+    /// Developer-defined tags and values used for filtering completions in the dashboard.
+    public let metadata: [String:String]?
 
     public init(
         messages: [Self.ChatCompletionMessageParam],
@@ -91,7 +95,9 @@ public struct ChatQuery: Equatable, Codable, Streamable {
         topP: Double? = nil,
         user: String? = nil,
         stream: Bool = false,
-        streamOptions: Self.StreamOptions? = nil
+        streamOptions: Self.StreamOptions? = nil,
+        store: Bool? = nil,
+        metadata: [String:String]? = nil
     ) {
         self.messages = messages
         self.model = model
@@ -112,6 +118,8 @@ public struct ChatQuery: Equatable, Codable, Streamable {
         self.user = user
         self.stream = stream
         self.streamOptions = streamOptions
+        self.store = store
+        self.metadata = metadata
     }
     
     public struct StreamOptions: Codable, Equatable {
@@ -937,5 +945,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
         case user
         case stream
         case streamOptions = "stream_options"
+        case store
+        case metadata
     }
 }

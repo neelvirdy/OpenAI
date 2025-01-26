@@ -148,6 +148,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
     public enum ChatCompletionMessageParam: Codable, Equatable {
 
         case system(Self.SystemMessageParam)
+        case developer(Self.DeveloperMessageParam)
         case user(Self.UserMessageParam)
         case assistant(Self.AssistantMessageParam)
         case tool(Self.ToolMessageParam)
@@ -156,6 +157,8 @@ public struct ChatQuery: Equatable, Codable, Streamable {
             switch self {
             case .system(let systemMessage):
                 return Self.UserMessageParam.Content.string(systemMessage.content)
+            case .developer(let developerMessage):
+                return Self.UserMessageParam.Content.string(developerMessage.content)
             case .user(let userMessage):
                 return userMessage.content
             case .assistant(let assistantMessage):
@@ -172,6 +175,8 @@ public struct ChatQuery: Equatable, Codable, Streamable {
             switch self {
             case .system(let systemMessage):
                 return systemMessage.role
+            case .developer(let developerMessage):
+                return developerMessage.role
             case .user(let userMessage):
                 return userMessage.role
             case .assistant(let assistantMessage):
@@ -185,6 +190,8 @@ public struct ChatQuery: Equatable, Codable, Streamable {
             switch self {
             case .system(let systemMessage):
                 return systemMessage.name
+            case .developer(let developerMessage):
+                return developerMessage.name
             case .user(let userMessage):
                 return userMessage.name
             case .assistant(let assistantMessage):
@@ -235,6 +242,12 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                 } else {
                     return nil
                 }
+            case .developer:
+                if let content {
+                    self = .developer(.init(content: content, name: name))
+                } else {
+                    return nil
+                }
             case .user:
                 if let content {
                     self = .user(.init(content: .init(string: content), name: name))
@@ -273,6 +286,8 @@ public struct ChatQuery: Equatable, Codable, Streamable {
         ) {
             if role == .system {
                 self = .system(.init(content: content, name: name))
+            } else if role == .developer {
+                self = .developer(.init(content: content, name: name))
             } else {
                 return nil
             }
@@ -320,6 +335,8 @@ public struct ChatQuery: Equatable, Codable, Streamable {
             switch self {
             case .system(let a0):
                 try container.encode(a0)
+            case .developer(let a0):
+                try container.encode(a0)
             case .user(let a0):
                 try container.encode(a0)
             case .assistant(let a0):
@@ -331,6 +348,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
 
         enum CodingKeys: CodingKey {
             case system
+            case developer
             case user
             case assistant
             case tool
@@ -343,6 +361,31 @@ public struct ChatQuery: Equatable, Codable, Streamable {
             public let content: String
             /// The role of the messages author, in this case system.
             public let role: Self.Role = .system
+            /// An optional name for the participant. Provides the model information to differentiate between participants of the same role.
+            public let name: String?
+
+            public init(
+                content: String,
+                name: String? = nil
+            ) {
+                self.content = content
+                self.name = name
+            }
+
+            enum CodingKeys: CodingKey {
+                case content
+                case role
+                case name
+            }
+        }
+        
+        public struct DeveloperMessageParam: Codable, Equatable {
+            public typealias Role = ChatQuery.ChatCompletionMessageParam.Role
+
+            /// The contents of the developer message.
+            public let content: String
+            /// The role of the messages author, in this case developer.
+            public let role: Self.Role = .developer
             /// An optional name for the participant. Provides the model information to differentiate between participants of the same role.
             public let name: String?
 
@@ -621,6 +664,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
 
         public enum Role: String, Codable, Equatable, CaseIterable {
             case system
+            case developer
             case user
             case assistant
             case tool

@@ -20,6 +20,8 @@ public struct ChatStreamResult: Codable, Equatable {
             /// The role of the author of this message.
             public let role: Self.Role?
             public let toolCalls: [Self.ChoiceDeltaToolCall]?
+            /// The refusal message, if the model refuses to respond.
+            public let refusal: String?
 
             public struct ChoiceDeltaToolCall: Codable, Equatable {
 
@@ -63,6 +65,7 @@ public struct ChatStreamResult: Codable, Equatable {
                 case content
                 case role
                 case toolCalls = "tool_calls"
+                case refusal
             }
         }
 

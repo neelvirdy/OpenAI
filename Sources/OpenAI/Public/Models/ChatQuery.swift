@@ -705,7 +705,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
         
         case text
         case jsonObject
-        case jsonSchema(name: String, schema: ChatQuery.ChatCompletionToolParam.FunctionDefinition.FunctionParameters.Property, strict: Bool)
+        case jsonSchema(name: String, schema: ChatQuery.ChatCompletionToolParam.FunctionDefinition.SchemaDefinition, strict: Bool)
 
         enum CodingKeys: String, CodingKey {
             case type
@@ -747,7 +747,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
     private struct JSONSchema: Encodable {
         
         let name: String
-        let schema: ChatQuery.ChatCompletionToolParam.FunctionDefinition.FunctionParameters.Property
+        let schema: ChatQuery.ChatCompletionToolParam.FunctionDefinition.SchemaDefinition
         let strict: Bool
 
         enum CodingKeys: String, CodingKey {
@@ -756,7 +756,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
             case strict
         }
 
-        init(name: String, schema: ChatQuery.ChatCompletionToolParam.FunctionDefinition.FunctionParameters.Property, strict: Bool) {
+        init(name: String, schema: ChatQuery.ChatCompletionToolParam.FunctionDefinition.SchemaDefinition, strict: Bool) {
             self.name = name
             self.schema = schema
             self.strict = strict
@@ -851,7 +851,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
             /// https://platform.openai.com/docs/guides/text-generation/function-calling
             /// https://json-schema.org/understanding-json-schema/
             /// **Python library defines only [String: Object] dictionary.
-            public let parameters: Self.FunctionParameters?
+            public let parameters: Self.SchemaDefinition?
 
             /// Whether to enable strict schema adherence when generating the function call. If set to true, the model will follow the exact schema defined in the parameters field. Only a subset of JSON Schema is supported when strict is true.
             public let strict: Bool?
@@ -859,7 +859,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
             public init(
                 name: String,
                 description: String? = nil,
-                parameters: Self.FunctionParameters? = nil,
+                parameters: Self.SchemaDefinition? = nil,
                 strict: Bool? = nil
             ) {
                 self.name = name
@@ -869,7 +869,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
             }
 
             /// See the [guide](/docs/guides/gpt/function-calling) for examples, and the [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for documentation about the format.
-            public struct FunctionParameters: Codable, Equatable {
+            public class SchemaDefinition: Codable, Equatable {
 
                 // New enum to handle single or multiple JSONTypes
                 public enum JSONTypeOrArray: Codable, Equatable {
@@ -916,32 +916,66 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                 }
 
                 // Updated type property using JSONTypeOrArray
+                public static func == (lhs: SchemaDefinition, rhs: SchemaDefinition) -> Bool {
+                    return lhs.type == rhs.type &&
+                    lhs.description == rhs.description &&
+                    lhs.properties == rhs.properties &&
+                    lhs.format == rhs.format &&
+                    lhs.items == rhs.items &&
+                    lhs.required == rhs.required &&
+                    lhs.pattern == rhs.pattern &&
+                    lhs.const == rhs.const &&
+                    lhs.`enum` == rhs.`enum` &&
+                    lhs.multipleOf == rhs.multipleOf &&
+                    lhs.minimum == rhs.minimum &&
+                    lhs.maximum == rhs.maximum &&
+                    lhs.minItems == rhs.minItems &&
+                    lhs.maxItems == rhs.maxItems &&
+                    lhs.uniqueItems == rhs.uniqueItems &&
+                    lhs.additionalProperties == rhs.additionalProperties
+                }
+
                 public let type: JSONTypeOrArray
-                public let properties: [String: Property]?
+                public let description: String?
+                public let properties: [String: SchemaDefinition]?
+                public let format: String?
+                public let items: SchemaDefinition?
                 public let required: [String]?
                 public let pattern: String?
                 public let const: String?
                 public let `enum`: [String]?
                 public let multipleOf: Int?
-                public let minimum: Int?
-                public let maximum: Int?
+                public let minimum: Double?
+                public let maximum: Double?
+                public let minItems: Int?
+                public let maxItems: Int?
+                public let uniqueItems: Bool?
                 public let additionalProperties: Bool?
 
                 // Updated initializer accepting JSONTypeOrArray
                 public init(
                     type: JSONTypeOrArray, // Changed from JSONType to JSONTypeOrArray
-                    properties: [String : Property]? = nil,
+                    description: String? = nil,
+                    properties: [String: SchemaDefinition]? = nil,
+                    format: String? = nil,
+                    items: SchemaDefinition? = nil,
                     required: [String]? = nil,
                     pattern: String? = nil,
                     const: String? = nil,
                     enum: [String]? = nil,
                     multipleOf: Int? = nil,
-                    minimum: Int? = nil,
-                    maximum: Int? = nil,
+                    minimum: Double? = nil,
+                    maximum: Double? = nil,
+                    minItems: Int? = nil,
+                    maxItems: Int? = nil,
+                    uniqueItems: Bool? = nil,
                     additionalProperties: Bool? = nil
                 ) {
                     self.type = type
+                    self.description = description
                     self.properties = properties
+                    self.format = format
+                    self.items = items
                     self.required = required
                     self.pattern = pattern
                     self.const = const
@@ -949,25 +983,37 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                     self.multipleOf = multipleOf
                     self.minimum = minimum
                     self.maximum = maximum
+                    self.minItems = minItems
+                    self.maxItems = maxItems
+                    self.uniqueItems = uniqueItems
                     self.additionalProperties = additionalProperties
                 }
 
                 // Convenience initializer to maintain backward compatibility
-                public init(
+                public convenience init(
                     type: JSONType, // Existing initializer accepting JSONType
-                    properties: [String : Property]? = nil,
+                    description: String? = nil,
+                    properties: [String: SchemaDefinition]? = nil,
+                    format: String? = nil,
+                    items: SchemaDefinition? = nil,
                     required: [String]? = nil,
                     pattern: String? = nil,
                     const: String? = nil,
                     enum: [String]? = nil,
                     multipleOf: Int? = nil,
-                    minimum: Int? = nil,
-                    maximum: Int? = nil,
+                    minimum: Double? = nil,
+                    maximum: Double? = nil,
+                    minItems: Int? = nil,
+                    maxItems: Int? = nil,
+                    uniqueItems: Bool? = nil,
                     additionalProperties: Bool? = nil
                 ) {
                     self.init(
                         type: JSONTypeOrArray(type),
+                        description: description,
                         properties: properties,
+                        format: format,
+                        items: items,
                         required: required,
                         pattern: pattern,
                         const: const,
@@ -975,160 +1021,49 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                         multipleOf: multipleOf,
                         minimum: minimum,
                         maximum: maximum,
+                        minItems: minItems,
+                        maxItems: maxItems,
+                        uniqueItems: uniqueItems,
                         additionalProperties: additionalProperties
                     )
                 }
 
-                public class Property: Codable, Equatable {
-                    public static func == (lhs: Property, rhs: Property) -> Bool {
-                        return lhs.type == rhs.type &&
-                        lhs.description == rhs.description &&
-                        lhs.properties == rhs.properties &&
-                        lhs.format == rhs.format &&
-                        lhs.items == rhs.items &&
-                        lhs.required == rhs.required &&
-                        lhs.pattern == rhs.pattern &&
-                        lhs.const == rhs.const &&
-                        lhs.`enum` == rhs.`enum` &&
-                        lhs.multipleOf == rhs.multipleOf &&
-                        lhs.minimum == rhs.minimum &&
-                        lhs.maximum == rhs.maximum &&
-                        lhs.minItems == rhs.minItems &&
-                        lhs.maxItems == rhs.maxItems &&
-                        lhs.uniqueItems == rhs.uniqueItems &&
-                        lhs.additionalProperties == rhs.additionalProperties
-                    }
-
-                    public let type: JSONTypeOrArray
-                    public let description: String?
-                    public let properties: [String: Property]?
-                    public let format: String?
-                    public let items: Property?
-                    public let required: [String]?
-                    public let pattern: String?
-                    public let const: String?
-                    public let `enum`: [String]?
-                    public let multipleOf: Int?
-                    public let minimum: Double?
-                    public let maximum: Double?
-                    public let minItems: Int?
-                    public let maxItems: Int?
-                    public let uniqueItems: Bool?
-                    public let additionalProperties: Bool?
-
-                    // Updated initializer accepting JSONTypeOrArray
-                    public init(
-                        type: JSONTypeOrArray,
-                        description: String? = nil,
-                        properties: [String: Property]? = nil,
-                        format: String? = nil,
-                        items: Property? = nil,
-                        required: [String]? = nil,
-                        pattern: String? = nil,
-                        const: String? = nil,
-                        enum: [String]? = nil,
-                        multipleOf: Int? = nil,
-                        minimum: Double? = nil,
-                        maximum: Double? = nil,
-                        minItems: Int? = nil,
-                        maxItems: Int? = nil,
-                        uniqueItems: Bool? = nil,
-                        additionalProperties: Bool? = nil
-                    ) {
-                        self.type = type
-                        self.description = description
-                        self.properties = properties
-                        self.format = format
-                        self.items = items
-                        self.required = required
-                        self.pattern = pattern
-                        self.const = const
-                        self.`enum` = `enum`
-                        self.multipleOf = multipleOf
-                        self.minimum = minimum
-                        self.maximum = maximum
-                        self.minItems = minItems
-                        self.maxItems = maxItems
-                        self.uniqueItems = uniqueItems
-                        self.additionalProperties = additionalProperties
-                    }
-
-                    // Convenience initializer to maintain backward compatibility
-                    public convenience init(
-                        type: JSONType, // Existing initializer accepting JSONType
-                        description: String? = nil,
-                        properties: [String: Property]? = nil,
-                        format: String? = nil,
-                        items: Property? = nil,
-                        required: [String]? = nil,
-                        pattern: String? = nil,
-                        const: String? = nil,
-                        enum: [String]? = nil,
-                        multipleOf: Int? = nil,
-                        minimum: Double? = nil,
-                        maximum: Double? = nil,
-                        minItems: Int? = nil,
-                        maxItems: Int? = nil,
-                        uniqueItems: Bool? = nil,
-                        additionalProperties: Bool? = nil
-                    ) {
-                        self.init(
-                            type: JSONTypeOrArray(type),
-                            description: description,
-                            properties: properties,
-                            format: format,
-                            items: items,
-                            required: required,
-                            pattern: pattern,
-                            const: const,
-                            enum: `enum`,
-                            multipleOf: multipleOf,
-                            minimum: minimum,
-                            maximum: maximum,
-                            minItems: minItems,
-                            maxItems: maxItems,
-                            uniqueItems: uniqueItems,
-                            additionalProperties: additionalProperties
-                        )
-                    }
-
-                    public convenience init(
-                        type: [JSONType],
-                        description: String? = nil,
-                        properties: [String: Property]? = nil,
-                        format: String? = nil,
-                        items: Property? = nil,
-                        required: [String]? = nil,
-                        pattern: String? = nil,
-                        const: String? = nil,
-                        enum: [String]? = nil,
-                        multipleOf: Int? = nil,
-                        minimum: Double? = nil,
-                        maximum: Double? = nil,
-                        minItems: Int? = nil,
-                        maxItems: Int? = nil,
-                        uniqueItems: Bool? = nil,
-                        additionalProperties: Bool? = nil
-                    ) {
-                        self.init(
-                            type: JSONTypeOrArray(type),
-                            description: description,
-                            properties: properties,
-                            format: format,
-                            items: items,
-                            required: required,
-                            pattern: pattern,
-                            const: const,
-                            enum: `enum`,
-                            multipleOf: multipleOf,
-                            minimum: minimum,
-                            maximum: maximum,
-                            minItems: minItems,
-                            maxItems: maxItems,
-                            uniqueItems: uniqueItems,
-                            additionalProperties: additionalProperties
-                        )
-                    }
+                public convenience init(
+                    type: [JSONType],
+                    description: String? = nil,
+                    properties: [String: SchemaDefinition]? = nil,
+                    format: String? = nil,
+                    items: SchemaDefinition? = nil,
+                    required: [String]? = nil,
+                    pattern: String? = nil,
+                    const: String? = nil,
+                    enum: [String]? = nil,
+                    multipleOf: Int? = nil,
+                    minimum: Double? = nil,
+                    maximum: Double? = nil,
+                    minItems: Int? = nil,
+                    maxItems: Int? = nil,
+                    uniqueItems: Bool? = nil,
+                    additionalProperties: Bool? = nil
+                ) {
+                    self.init(
+                        type: JSONTypeOrArray(type),
+                        description: description,
+                        properties: properties,
+                        format: format,
+                        items: items,
+                        required: required,
+                        pattern: pattern,
+                        const: const,
+                        enum: `enum`,
+                        multipleOf: multipleOf,
+                        minimum: minimum,
+                        maximum: maximum,
+                        minItems: minItems,
+                        maxItems: maxItems,
+                        uniqueItems: uniqueItems,
+                        additionalProperties: additionalProperties
+                    )
                 }
 
                 public enum JSONType: String, Codable, Equatable {

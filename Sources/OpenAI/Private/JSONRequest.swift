@@ -38,10 +38,6 @@ extension JSONRequest: URLRequestBuildable {
             encoder.outputFormatting = .sortedKeys
             let encoded = try encoder.encode(body)
             request.httpBody = encoded
-
-            #if DEBUG
-            print(String(decoding: encoded, as: UTF8.self))
-            #endif
         }
         return request
     }

@@ -943,7 +943,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                 public let required: [String]?
                 public let pattern: String?
                 public let const: String?
-                public let `enum`: [String]?
+                public let `enum`: [JSONValue]?
                 public let multipleOf: Int?
                 public let minimum: Double?
                 public let maximum: Double?
@@ -962,7 +962,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                     required: [String]? = nil,
                     pattern: String? = nil,
                     const: String? = nil,
-                    enum: [String]? = nil,
+                    enum: [JSONValue]? = nil,
                     multipleOf: Int? = nil,
                     minimum: Double? = nil,
                     maximum: Double? = nil,
@@ -989,9 +989,8 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                     self.additionalProperties = additionalProperties
                 }
 
-                // Convenience initializer to maintain backward compatibility
                 public convenience init(
-                    type: JSONType, // Existing initializer accepting JSONType
+                    type: JSONType,
                     description: String? = nil,
                     properties: [String: SchemaDefinition]? = nil,
                     format: String? = nil,
@@ -999,7 +998,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                     required: [String]? = nil,
                     pattern: String? = nil,
                     const: String? = nil,
-                    enum: [String]? = nil,
+                    enum values: [JSONEnumRepresentable]? = nil,
                     multipleOf: Int? = nil,
                     minimum: Double? = nil,
                     maximum: Double? = nil,
@@ -1017,7 +1016,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                         required: required,
                         pattern: pattern,
                         const: const,
-                        enum: `enum`,
+                        enum: values?.map { $0.jsonValue },
                         multipleOf: multipleOf,
                         minimum: minimum,
                         maximum: maximum,
@@ -1037,7 +1036,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                     required: [String]? = nil,
                     pattern: String? = nil,
                     const: String? = nil,
-                    enum: [String]? = nil,
+                    enum values: [JSONEnumRepresentable]? = nil,
                     multipleOf: Int? = nil,
                     minimum: Double? = nil,
                     maximum: Double? = nil,
@@ -1055,7 +1054,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
                         required: required,
                         pattern: pattern,
                         const: const,
-                        enum: `enum`,
+                        enum: values?.map { $0.jsonValue },
                         multipleOf: multipleOf,
                         minimum: minimum,
                         maximum: maximum,

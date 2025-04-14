@@ -10,6 +10,31 @@ public typealias Model = String
 
 public extension Model {
     // Chat Completion
+
+    // o3 series
+    /// `o3-mini`: small reasoning model providing high intelligence at the same cost and latency targets of o1-mini.
+    static let o3_mini = "o3-mini"
+    
+    // o1 series
+    // The o1 series of models are trained with reinforcement learning to perform complex reasoning. o1 models think before they answer, producing a long internal chain of thought before responding to the user.
+    
+    /// `o1`: reasoning model designed to solve hard problems across domains
+    static let o1 = "o1"
+    
+    /// `o1-mini`: fast and affordable reasoning model for specialized tasks
+    static let o1_mini = "o1-mini"
+
+    // GPT-4.1
+
+    /// `gpt-4.1` Smartest model for complex tasks
+    static let gpt4_1 = "gpt-4.1"
+
+    /// `gpt-4.1-mini` Affordable model balancing speed and intelligence
+    static let gpt4_1_mini = "gpt-4.1-mini"
+
+    /// `gpt-4.1-nano` Fastest, most cost-effective model for low-latency tasks
+    static let gpt4_1_nano = "gpt-4.1-nano"
+
     // GPT-4
 
     /// `gpt-4o-2024-08-06`, latest snapshot that supports Structured Outputs

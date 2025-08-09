@@ -695,6 +695,7 @@ public struct ChatQuery: Equatable, Codable, Streamable {
     }
     
     public enum ReasoningEffort: String, Codable, Equatable {
+        case minimal
         case low
         case medium
         case high

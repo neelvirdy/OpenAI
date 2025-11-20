@@ -14,7 +14,8 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
     public typealias OutputContent = Components.Schemas.OutputContent
     public typealias OutputText = Components.Schemas.OutputTextContent
     public typealias Annotation = Components.Schemas.Annotation
-    
+    public typealias IncompleteDetails = Schemas.Response.Value3Payload.IncompleteDetailsPayload?
+
     public enum OutputItemEvent: Codable, Equatable, Sendable {
         /// Emitted when a new output item is added.
         case added(ResponseOutputItemAddedEvent)
@@ -177,7 +178,7 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
     /// An event that is emitted when a response fails.
     case failed(ResponseEvent)
     /// An event that is emitted when a response finishes as incomplete.
-    case incomplete(ResponseEvent)
+    case incomplete(IncompleteDetails)
     /// Emitted when a response is queued and waiting to be processed.
     case queued(ResponseEvent)
     

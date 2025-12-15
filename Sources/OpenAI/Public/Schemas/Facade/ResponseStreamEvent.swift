@@ -22,20 +22,20 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
         /// Emitted when an output item is marked done.
         case done(ResponseOutputItemDoneEvent)
     }
-    
+
     public enum ContentPartEvent: Codable, Equatable, Sendable {
         /// Emitted when a new content part is added.
         case added(Schemas.ResponseContentPartAddedEvent)
         /// Emitted when a content part is done.
         case done(Schemas.ResponseContentPartDoneEvent)
     }
-    
+
     public enum OutputTextEvent: Codable, Equatable, Sendable, CustomStringConvertible {
         /// Emitted when there is an additional text delta.
         case delta(Schemas.ResponseTextDeltaEvent)
         /// Emitted when text content is finalized.
         case done(Schemas.ResponseTextDoneEvent)
-        
+
         public var description: String {
             switch self {
             case .delta(let event):
@@ -45,21 +45,21 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
             }
         }
     }
-    
+
     public enum RefusalEvent: Codable, Equatable, Sendable {
         /// Emitted when there is a partial refusal text.
         case delta(Schemas.ResponseRefusalDeltaEvent)
         /// Emitted when refusal text is finalized.
         case done(Schemas.ResponseRefusalDoneEvent)
     }
-    
+
     public enum FunctionCallArgumentsEvent: Codable, Equatable, Sendable {
         /// Emitted when there is a partial function-call arguments delta.
         case delta(Schemas.ResponseFunctionCallArgumentsDeltaEvent)
         /// Emitted when function-call arguments are finalized.
         case done(Schemas.ResponseFunctionCallArgumentsDoneEvent)
     }
-    
+
     public enum FileSearchCallEvent: Codable, Equatable, Sendable {
         /// Emitted when a file search call is initiated.
         case inProgress(Schemas.ResponseFileSearchCallInProgressEvent)
@@ -68,7 +68,7 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
         /// Emitted when a file search call is completed (results found).
         case completed(Schemas.ResponseFileSearchCallCompletedEvent)
     }
-    
+
     public enum WebSearchCallEvent: Codable, Equatable, Sendable {
         /// Emitted when a web search call is initiated.
         case inProgress(Schemas.ResponseWebSearchCallInProgressEvent)
@@ -77,21 +77,21 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
         /// Emitted when a web search call is completed.
         case completed(Schemas.ResponseWebSearchCallCompletedEvent)
     }
-    
+
     public enum ReasoningSummaryPartEvent: Codable, Equatable, Sendable {
         /// Emitted when a new reasoning summary part is added.
         case added(Schemas.ResponseReasoningSummaryPartAddedEvent)
         /// Emitted when a reasoning summary part is completed.
         case done(Schemas.ResponseReasoningSummaryPartDoneEvent)
     }
-    
+
     public enum ReasoningSummaryTextEvent: Codable, Equatable, Sendable {
         /// Emitted when a delta is added to a reasoning summary text.
         case delta(Schemas.ResponseReasoningSummaryTextDeltaEvent)
         /// Emitted when a reasoning summary text is completed.
         case done(Schemas.ResponseReasoningSummaryTextDoneEvent)
     }
-    
+
     public enum ImageGenerationCallEvent: Codable, Equatable, Sendable {
         /// Emitted when an image generation tool call has completed and the final image is available.
         case completed(Schemas.ResponseImageGenCallCompletedEvent)
@@ -102,14 +102,14 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
         /// Emitted when a partial image is available during image generation streaming.
         case partialImage(Schemas.ResponseImageGenCallPartialImageEvent)
     }
-    
+
     public enum MCPCallArgumentsEvent: Codable, Equatable, Sendable {
         /// Emitted when there is a delta (partial update) to the arguments of an MCP tool call.
         case delta(ResponseMCPCallArgumentsDeltaEvent)
         /// Emitted when the arguments for an MCP tool call are finalized.
         case done(ResponseMCPCallArgumentsDoneEvent)
     }
-    
+
     public enum MCPCallEvent: Codable, Equatable, Sendable {
         /// Emitted when an MCP tool call has completed successfully.
         case completed(Schemas.ResponseMCPCallCompletedEvent)
@@ -118,7 +118,7 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
         /// Emitted when an MCP tool call is in progress.
         case inProgress(Schemas.ResponseMCPCallInProgressEvent)
     }
-    
+
     public enum MCPListToolsEvent: Codable, Equatable, Sendable {
         /// Emitted when the list of available MCP tools has been successfully retrieved.
         case completed(Schemas.ResponseMCPListToolsCompletedEvent)
@@ -127,48 +127,48 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
         /// Emitted when the system is in the process of retrieving the list of available MCP tools.
         case inProgress(Schemas.ResponseMCPListToolsInProgressEvent)
     }
-    
+
     public enum OutputTextAnnotationEvent: Codable, Equatable, Sendable {
         /// Emitted when an annotation is added to output text content.
         case added(Schemas.ResponseOutputTextAnnotationAddedEvent)
     }
-    
+
     public enum ReasoningEvent: Codable, Equatable, Sendable {
         /// Emitted when there is a delta (partial update) to the reasoning content.
         case delta(Schemas.ResponseReasoningDeltaEvent)
         /// Emitted when the reasoning content is finalized for an item.
         case done(Schemas.ResponseReasoningDoneEvent)
     }
-    
+
     public enum ReasoningSummaryEvent: Codable, Equatable, Sendable {
         /// Emitted when there is a delta (partial update) to the reasoning summary content.
         case delta(Schemas.ResponseReasoningSummaryDeltaEvent)
         /// Emitted when the reasoning summary content is finalized for an item.
         case done(Schemas.ResponseReasoningSummaryDoneEvent)
     }
-    
+
     public enum AudioEvent: Codable, Equatable, Sendable {
         case delta(Schemas.ResponseAudioDeltaEvent)
         case done(Schemas.ResponseAudioDoneEvent)
     }
-    
+
     public enum AudioTranscriptEvent: Codable, Equatable, Sendable {
         case delta(Schemas.ResponseAudioTranscriptDeltaEvent)
         case done(Schemas.ResponseAudioTranscriptDoneEvent)
     }
-    
+
     public enum CodeInterpreterCallEvent: Codable, Equatable, Sendable {
         public enum CodeEvent: Codable, Equatable, Sendable {
             case delta(Schemas.ResponseCodeInterpreterCallCodeDeltaEvent)
             case done(Schemas.ResponseCodeInterpreterCallCodeDoneEvent)
         }
-        
+
         case code(CodeEvent)
         case completed(Schemas.ResponseCodeInterpreterCallCompletedEvent)
         case inProgress(Schemas.ResponseCodeInterpreterCallInProgressEvent)
         case interpreting(Schemas.ResponseCodeInterpreterCallInterpretingEvent)
     }
-    
+
     /// An event that is emitted when a response is created.
     case created(ResponseEvent)
     /// Emitted when the response is in progress.
@@ -181,7 +181,7 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
     case incomplete(IncompleteDetails)
     /// Emitted when a response is queued and waiting to be processed.
     case queued(ResponseEvent)
-    
+
     case outputItem(OutputItemEvent)
     case contentPart(ContentPartEvent)
     case outputText(OutputTextEvent)
@@ -202,21 +202,42 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
     case outputTextAnnotation(OutputTextAnnotationEvent)
     case reasoning(ReasoningEvent)
     case reasoningSummary(ReasoningSummaryEvent)
-    
+
     enum ResponseStreamEventDecodingError: Error {
         case unknownEventType(String)
         case unknownEvent(Components.Schemas.ResponseStreamEvent)
         case unexpectedParsingCase
     }
-    
+
+    private struct IncompleteEventContainer: Codable {
+        let type: String
+        let incompleteDetails: Schemas.Response.Value3Payload.IncompleteDetailsPayload?
+
+        enum CodingKeys: String, CodingKey {
+            case type
+            case incompleteDetails = "incomplete_details"
+        }
+    }
+
     public init(from decoder: any Decoder) throws {
+        // First, try to decode as incomplete event (has incomplete_details at top level)
+        do {
+            let container = try IncompleteEventContainer(from: decoder)
+            if container.type == "response.incomplete" {
+                self = .incomplete(container.incompleteDetails)
+                return
+            }
+        } catch {
+            // Not an incomplete event, continue
+        }
+
         do {
             // Decoding Response Event
             let responseEvent = try ResponseEvent(from: decoder)
             guard let responseEventType = ModelResponseStreamEventType(rawValue: responseEvent.type) else {
                 throw ResponseStreamEventDecodingError.unknownEventType(responseEvent.type)
             }
-            
+
             switch responseEventType {
             case .responseCreated:
                 self = .created(responseEvent)
@@ -227,7 +248,8 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
             case .responseFailed:
                 self = .failed(responseEvent)
             case .responseIncomplete:
-                self = .incomplete(responseEvent)
+                // This should not be reached since we handle it above
+                throw ResponseStreamEventDecodingError.unexpectedParsingCase
             case .responseQueued:
                 self = .queued(responseEvent)
             default:
@@ -237,7 +259,7 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
         } catch {
             // Do nothing, will try other coding types
         }
-        
+
         do {
             // Decoding Output Item events
             let outputItemAddedEvent = try ResponseOutputItemAddedEvent(from: decoder)
@@ -246,7 +268,7 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
         } catch {
             // Do nothing, will try other coding types
         }
-        
+
         do {
             // Decoding Output Item events
             let outputItemDoneEvent = try ResponseOutputItemDoneEvent(from: decoder)
@@ -255,7 +277,7 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
         } catch {
             // Do nothing, will try other coding types
         }
-        
+
         // Decoding MCPCallArgumentsEvent
         // Once OPENAI fix the response issue, can put back below code to rawEvent
         //        else if let value = rawEvent.value40 {
@@ -275,7 +297,7 @@ public enum ResponseStreamEvent: Codable, Equatable, Sendable {
         } catch {
             //
         }
-        
+
         let rawEvent = try Components.Schemas.ResponseStreamEvent(from: decoder)
         if rawEvent.value10 != nil || rawEvent.value13 != nil || rawEvent.value20 != nil || rawEvent.value21 != nil, rawEvent.value22 != nil, rawEvent.value40 != nil, rawEvent.value41 != nil, rawEvent.value49 != nil {
             // The following events are handled elsewhere by non-generated types

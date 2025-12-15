@@ -13,17 +13,17 @@ final class ModelResponseEventsStreamInterpreter: @unchecked Sendable, StreamInt
     private var onEventDispatched: ((ResponseStreamEvent) -> Void)?
     private var onError: ((Error) -> Void)?
     private let decoder = JSONDecoder()
-    
+
     enum InterpreterError: DescribedError {
         case unknownEventType(String)
     }
-    
+
     init () {
         parser.setCallbackClosures { [weak self] event in
             guard let self else {
                 return
             }
-            
+
             do {
                 try self.processEvent(event)
             } catch {
@@ -33,7 +33,7 @@ final class ModelResponseEventsStreamInterpreter: @unchecked Sendable, StreamInt
             self?.processError(error)
         }
     }
-    
+
     /// Sets closures an instance of type. Not thread safe.
     ///
     /// - Parameters:
@@ -43,17 +43,17 @@ final class ModelResponseEventsStreamInterpreter: @unchecked Sendable, StreamInt
         self.onEventDispatched = onEventDispatched
         self.onError = onError
     }
-    
+
     func processData(_ data: Data) {
         let decoder = JSONDecoder()
         if let decoded = JSONResponseErrorDecoder(decoder: decoder).decodeErrorResponse(data: data) {
             onError?(decoded)
             return
         }
-        
+
         parser.processData(data: data)
     }
-    
+
     private func processEvent(_ event: ServerSentEventsStreamParser.Event) throws {
         let finalEvent = event.fixMappingError()
         var eventType = finalEvent.eventType
@@ -68,7 +68,7 @@ final class ModelResponseEventsStreamInterpreter: @unchecked Sendable, StreamInt
         guard let modelResponseEventType = ModelResponseStreamEventType(rawValue: eventType) else {
             throw InterpreterError.unknownEventType(eventType)
         }
-        
+
         let responseStreamEvent = try responseStreamEvent(modelResponseEventType: modelResponseEventType, data: finalEvent.data)
         onEventDispatched?(responseStreamEvent)
     }
@@ -76,9 +76,19 @@ final class ModelResponseEventsStreamInterpreter: @unchecked Sendable, StreamInt
     private func processError(_ error: Error) {
         onError?(error)
     }
-    
+
     private typealias Schemas = Components.Schemas
-    
+
+    private struct IncompleteEventContainer: Codable {
+        let type: String
+        let incompleteDetails: Components.Schemas.Response.Value3Payload.IncompleteDetailsPayload?
+
+        enum CodingKeys: String, CodingKey {
+            case type
+            case incompleteDetails = "incomplete_details"
+        }
+    }
+
     private func responseStreamEvent(
         modelResponseEventType: ModelResponseStreamEventType,
         data: Data
@@ -93,7 +103,7 @@ final class ModelResponseEventsStreamInterpreter: @unchecked Sendable, StreamInt
         case .responseFailed:
                 .failed(try decode(data: data))
         case .responseIncomplete:
-                .incomplete(try decode(data: data))
+                .incomplete((try decode(data: data) as IncompleteEventContainer).incompleteDetails)
         case .responseOutputItemAdded:
                 .outputItem(.added(try decode(data: data)))
         case .responseOutputItemDone:
@@ -204,7 +214,7 @@ final class ModelResponseEventsStreamInterpreter: @unchecked Sendable, StreamInt
                 .error(try decode(data: data))
         }
     }
-    
+
     private func decode<T: Codable>(data: Data) throws -> T {
         try decoder.decode(T.self, from: data)
     }

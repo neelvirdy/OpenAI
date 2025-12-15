@@ -84,4 +84,118 @@ final class ModelResponseEventsStreamInterpreterTests: XCTestCase {
             XCTFail("Expected .outputText(.delta), got \(receivedEvent)")
         }
     }
+
+    func testParsesResponseIncompleteWithIncompleteDetails() async throws {
+        let expectation = XCTestExpectation(description: "Response incomplete event received")
+        var receivedEvent: ResponseStreamEvent?
+
+        interpreter.setCallbackClosures { event in
+            Task {
+                await MainActor.run {
+                    receivedEvent = event
+                    expectation.fulfill()
+                }
+            }
+        } onError: { error in
+            XCTFail("Unexpected error received: \(error)")
+        }
+
+        interpreter.processData(
+            MockServerSentEvent.responseIncompleteEvent(
+                responseId: "resp_456",
+                incompleteReason: "max_output_tokens",
+                sequenceNumber: 2
+            )
+        )
+
+        await fulfillment(of: [expectation], timeout: 1.0)
+
+        guard let receivedEvent else {
+            XCTFail("No event received")
+            return
+        }
+
+        switch receivedEvent {
+        case .incomplete(let incompleteDetails):
+            XCTAssertNotNil(incompleteDetails, "Expected incompleteDetails to be non-nil")
+            XCTAssertEqual(incompleteDetails?.reason, .maxOutputTokens, "Expected reason to be max_output_tokens")
+        default:
+            XCTFail("Expected .incomplete(IncompleteDetails), got \(receivedEvent)")
+        }
+    }
+
+    func testParsesResponseIncompleteWithContentFilterReason() async throws {
+        let expectation = XCTestExpectation(description: "Response incomplete event with content_filter reason received")
+        var receivedEvent: ResponseStreamEvent?
+
+        interpreter.setCallbackClosures { event in
+            Task {
+                await MainActor.run {
+                    receivedEvent = event
+                    expectation.fulfill()
+                }
+            }
+        } onError: { error in
+            XCTFail("Unexpected error received: \(error)")
+        }
+
+        interpreter.processData(
+            MockServerSentEvent.responseIncompleteEvent(
+                responseId: "resp_789",
+                incompleteReason: "content_filter",
+                sequenceNumber: 3
+            )
+        )
+
+        await fulfillment(of: [expectation], timeout: 1.0)
+
+        guard let receivedEvent else {
+            XCTFail("No event received")
+            return
+        }
+
+        switch receivedEvent {
+        case .incomplete(let incompleteDetails):
+            XCTAssertNotNil(incompleteDetails, "Expected incompleteDetails to be non-nil")
+            XCTAssertEqual(incompleteDetails?.reason, .contentFilter, "Expected reason to be content_filter")
+        default:
+            XCTFail("Expected .incomplete(IncompleteDetails), got \(receivedEvent)")
+        }
+    }
+
+    func testParsesResponseIncompleteWithNilIncompleteDetails() async throws {
+        let expectation = XCTestExpectation(description: "Response incomplete event with nil incompleteDetails received")
+        var receivedEvent: ResponseStreamEvent?
+
+        interpreter.setCallbackClosures { event in
+            Task {
+                await MainActor.run {
+                    receivedEvent = event
+                    expectation.fulfill()
+                }
+            }
+        } onError: { error in
+            XCTFail("Unexpected error received: \(error)")
+        }
+
+        let json = """
+        {"type":"response.incomplete","incomplete_details":null}
+        """
+        let data = "data: \(json)\n\n".data(using: .utf8)!
+        interpreter.processData(data)
+
+        await fulfillment(of: [expectation], timeout: 1.0)
+
+        guard let receivedEvent else {
+            XCTFail("No event received")
+            return
+        }
+
+        switch receivedEvent {
+        case .incomplete(let incompleteDetails):
+            XCTAssertNil(incompleteDetails, "Expected incompleteDetails to be nil")
+        default:
+            XCTFail("Expected .incomplete(IncompleteDetails), got \(receivedEvent)")
+        }
+    }
 }

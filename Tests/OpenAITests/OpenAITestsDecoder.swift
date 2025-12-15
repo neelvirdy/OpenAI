@@ -318,6 +318,128 @@ class OpenAITestsDecoder: XCTestCase {
         )
         try decode(data, expectedValue)
     }
+
+    func testChatQueryToolChoiceAllowedTools() async throws {
+        let tool1 = ChatQuery.ChatCompletionToolParam.makeWeatherMock()
+        let tool2 = ChatQuery.ChatCompletionToolParam(
+            function: .init(
+                name: "get_forecast",
+                description: "Get the forecast in a given location",
+                parameters: nil,
+                strict: nil
+            )
+        )
+
+        let chatQuery = ChatQuery(
+            messages: [
+                .user(.init(content: .string("What's the weather like in Boston?")))
+            ],
+            model: .gpt5,
+            toolChoice: .allowedTools(["get_current_weather", "get_forecast"], mode: .auto),
+            tools: [
+                tool1,
+                tool2
+            ]
+        )
+
+        let expectedValue = """
+        {
+          "model": "gpt-5",
+          "messages": [
+            {
+              "role": "user",
+              "content": "What's the weather like in Boston?"
+            }
+          ],
+          "tools": [
+            {
+              "function": {
+                "name": "get_current_weather",
+                "description": "Get the current weather in a given location",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "string",
+                      "description": "The city and state, e.g. San Francisco, CA"
+                    },
+                    "unit": { "type": "string", "enum": ["celsius", "fahrenheit"] }
+                  },
+                  "required": ["location"]
+                }
+              },
+              "type": "function"
+            },
+            {
+              "function": {
+                "name": "get_forecast",
+                "description": "Get the forecast in a given location"
+              },
+              "type": "function"
+            }
+          ],
+          "tool_choice": {
+            "type": "allowed_tools",
+            "mode": "auto",
+            "tools": [
+              {
+                "type": "function",
+                "function": {
+                  "name": "get_current_weather"
+                }
+              },
+              {
+                "type": "function",
+                "function": {
+                  "name": "get_forecast"
+                }
+              }
+            ]
+          },
+          "stream": false
+        }
+        """
+
+        try encode(chatQuery, expectedValue)
+    }
+
+    func testCreateModelResponseQueryToolChoiceAllowedTools() async throws {
+        let allowedTools = Components.Schemas.ToolChoiceAllowedTools(
+            mode: .auto,
+            allowedTools: [
+                .ToolChoiceFunction(.init(_type: .function, name: "my_function")),
+                .ToolChoiceTypes(.init(_type: .fileSearch))
+            ]
+        )
+
+        let query = CreateModelResponseQuery(
+            input: .textInput("Hello"),
+            model: "test-model",
+            toolChoice: .ToolChoiceAllowedTools(allowedTools)
+        )
+
+        let expectedValue = """
+        {
+          "input": "Hello",
+          "model": "test-model",
+          "tool_choice": {
+            "type": "allowed_tools",
+            "mode": "auto",
+            "tools": [
+              {
+                "type": "function",
+                "name": "my_function"
+              },
+              {
+                "type": "file_search"
+              }
+            ]
+          }
+        }
+        """
+
+        try encode(query, expectedValue)
+    }
     
     func testChatQueryWithReasoningEffort() throws {
         let chatQuery = ChatQuery(

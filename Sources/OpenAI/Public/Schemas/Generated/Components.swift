@@ -7493,6 +7493,8 @@ public enum Components {
                 case ToolChoiceTypes(Components.Schemas.ToolChoiceTypes)
                 /// - Remark: Generated from `#/components/schemas/ResponseProperties/tool_choice/case3`.
                 case ToolChoiceFunction(Components.Schemas.ToolChoiceFunction)
+                /// - Remark: Generated from `#/components/schemas/ResponseProperties/tool_choice/case4`.
+                case ToolChoiceAllowedTools(Components.Schemas.ToolChoiceAllowedTools)
                 public init(from decoder: any Decoder) throws {
                     var errors: [any Error] = []
                     do {
@@ -7513,6 +7515,12 @@ public enum Components {
                     } catch {
                         errors.append(error)
                     }
+                    do {
+                        self = .ToolChoiceAllowedTools(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
                     throw Swift.DecodingError.failedToDecodeOneOfSchema(
                         type: Self.self,
                         codingPath: decoder.codingPath,
@@ -7526,6 +7534,8 @@ public enum Components {
                     case let .ToolChoiceTypes(value):
                         try value.encode(to: encoder)
                     case let .ToolChoiceFunction(value):
+                        try value.encode(to: encoder)
+                    case let .ToolChoiceAllowedTools(value):
                         try value.encode(to: encoder)
                     }
                 }
@@ -9929,6 +9939,129 @@ public enum Components {
             }
             public enum CodingKeys: String, CodingKey {
                 case _type = "type"
+            }
+        }
+        /// Use this option to let the model pick from a restricted set of tools.
+        ///
+        /// - Remark: Matches the `allowed_tools` tool choice shape.
+        public struct ToolChoiceAllowedTools: Codable, Hashable, Sendable {
+            /// For allowed tools selection, the type is always `allowed_tools`.
+            @frozen public enum _TypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case allowedTools = "allowed_tools"
+            }
+            /// Controls how the model chooses among the allowed tools.
+            @frozen public enum ModePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case auto = "auto"
+                case required = "required"
+            }
+            /// For allowed tools selection, the type is always `allowed_tools`.
+            public var _type: Components.Schemas.ToolChoiceAllowedTools._TypePayload
+            /// Controls how the model chooses among the allowed tools.
+            public var mode: Components.Schemas.ToolChoiceAllowedTools.ModePayload?
+            /// The list of tools the model is allowed to call.
+            @frozen public enum AllowedToolPayload: Codable, Hashable, Sendable {
+                case toolName(Swift.String)
+                case ToolChoiceTypes(Components.Schemas.ToolChoiceTypes)
+                case ToolChoiceFunction(Components.Schemas.ToolChoiceFunction)
+                public init(from decoder: any Decoder) throws {
+                    var errors: [any Error] = []
+                    do {
+                        self = .toolName(try decoder.decodeFromSingleValueContainer())
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .ToolChoiceTypes(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .ToolChoiceFunction(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    throw Swift.DecodingError.failedToDecodeOneOfSchema(
+                        type: Self.self,
+                        codingPath: decoder.codingPath,
+                        errors: errors
+                    )
+                }
+                public func encode(to encoder: any Encoder) throws {
+                    switch self {
+                    case let .toolName(value):
+                        try encoder.encodeToSingleValueContainer(value)
+                    case let .ToolChoiceTypes(value):
+                        try value.encode(to: encoder)
+                    case let .ToolChoiceFunction(value):
+                        try value.encode(to: encoder)
+                    }
+                }
+            }
+            public var allowedTools: [Components.Schemas.ToolChoiceAllowedTools.AllowedToolPayload]
+            public init(
+                _type: Components.Schemas.ToolChoiceAllowedTools._TypePayload = .allowedTools,
+                mode: Components.Schemas.ToolChoiceAllowedTools.ModePayload? = nil,
+                allowedTools: [Components.Schemas.ToolChoiceAllowedTools.AllowedToolPayload]
+            ) {
+                self._type = _type
+                self.mode = mode
+                self.allowedTools = allowedTools
+            }
+            public init(allowedToolNames: [Swift.String]) {
+                self._type = .allowedTools
+                self.mode = nil
+                self.allowedTools = allowedToolNames.map { .toolName($0) }
+            }
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+                case mode
+                case tools
+                case allowedTools = "allowed_tools"
+            }
+            public init(from decoder: any Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self._type = try container.decode(
+                    Components.Schemas.ToolChoiceAllowedTools._TypePayload.self,
+                    forKey: ._type
+                )
+                self.mode = try container.decodeIfPresent(
+                    Components.Schemas.ToolChoiceAllowedTools.ModePayload.self,
+                    forKey: .mode
+                )
+                if let tools = try container.decodeIfPresent(
+                    [Components.Schemas.ToolChoiceAllowedTools.AllowedToolPayload].self,
+                    forKey: .tools
+                ) {
+                    self.allowedTools = tools
+                } else if let allowedTools = try container.decodeIfPresent(
+                    [Components.Schemas.ToolChoiceAllowedTools.AllowedToolPayload].self,
+                    forKey: .allowedTools
+                ) {
+                    self.allowedTools = allowedTools
+                } else {
+                    throw Swift.DecodingError.keyNotFound(
+                        CodingKeys.tools,
+                        .init(
+                            codingPath: decoder.codingPath,
+                            debugDescription: "Expected `tools` (or legacy `allowed_tools`) in allowed_tools tool_choice."
+                        )
+                    )
+                }
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "type",
+                    "mode",
+                    "tools",
+                    "allowed_tools"
+                ])
+            }
+            public func encode(to encoder: any Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(self._type, forKey: ._type)
+                try container.encodeIfPresent(self.mode, forKey: .mode)
+                try container.encode(self.allowedTools, forKey: .tools)
             }
         }
         /// Emitted when there is an additional text delta. This is also the first event emitted when the transcription starts. Only emitted when you [create a transcription](/docs/api-reference/audio/create-transcription) with the `Stream` parameter set to `true`.

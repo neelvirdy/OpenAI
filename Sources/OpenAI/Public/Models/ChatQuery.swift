@@ -1082,6 +1082,28 @@ public struct ChatQuery: Equatable, Codable, Streamable, Sendable {
         case auto
         case function(String)
         case required
+        /// Let the model choose between a restricted set of function tools.
+        case allowedTools(AllowedTools)
+
+        public enum AllowedToolsMode: String, Codable, Equatable, Sendable {
+            case auto
+            case required
+        }
+
+        public struct AllowedTools: Codable, Equatable, Sendable {
+            public let mode: AllowedToolsMode?
+            public let tools: [String]
+
+            public init(mode: AllowedToolsMode? = nil, tools: [String]) {
+                self.mode = mode
+                self.tools = tools
+            }
+        }
+
+        /// Convenience overload that preserves `.allowedTools(...)` call site while adding optional `mode`.
+        public static func allowedTools(_ tools: [String], mode: AllowedToolsMode? = nil) -> Self {
+            .allowedTools(.init(mode: mode, tools: tools))
+        }
 
         public func encode(to encoder: Encoder) throws {
             switch self {
@@ -1092,17 +1114,92 @@ public struct ChatQuery: Equatable, Codable, Streamable, Sendable {
                 var container = encoder.singleValueContainer()
                 try container.encode(CodingKeys.auto.rawValue)
             case .function(let name):
-                var container = encoder.container(keyedBy: Self.ChatCompletionFunctionCallNameParam.CodingKeys.self)
-                try container.encode("function", forKey: .type)
-                try container.encode(["name": name], forKey: .function)
+                try ToolChoice(
+                    type: "function",
+                    function: FunctionNameParam(name: name),
+                    mode: nil,
+                    tools: nil,
+                    legacyAllowedTools: nil
+                ).encode(to: encoder)
             case .required:
                 var container = encoder.singleValueContainer()
                 try container.encode(CodingKeys.required.rawValue)
+            case .allowedTools(let config):
+                try ToolChoice(
+                    type: "allowed_tools",
+                    function: nil,
+                    mode: config.mode?.rawValue,
+                    tools: config.tools.map { .functionTool(.init(name: $0)) },
+                    legacyAllowedTools: nil
+                ).encode(to: encoder)
+            }
+        }
+
+        public init(from decoder: Decoder) throws {
+            if let container = try? decoder.singleValueContainer(),
+               let stringValue = try? container.decode(String.self) {
+                switch stringValue {
+                case CodingKeys.none.rawValue:
+                    self = .none
+                case CodingKeys.auto.rawValue:
+                    self = .auto
+                case CodingKeys.required.rawValue:
+                    self = .required
+                default:
+                    throw DecodingError.dataCorruptedError(
+                        in: container,
+                        debugDescription: "Unknown tool_choice value: \(stringValue)"
+                    )
+                }
+                return
+            }
+
+            let object = try ToolChoice(from: decoder)
+            switch object.type {
+            case "function":
+                guard let function = object.function else {
+                    throw DecodingError.keyNotFound(
+                        ToolChoice.CodingKeys.function,
+                        .init(
+                            codingPath: decoder.codingPath,
+                            debugDescription: "Expected `function` for tool_choice.type == \"function\"."
+                        )
+                    )
+                }
+                self = .function(function.name)
+            case "allowed_tools":
+                let allowedTools: [AllowedToolNamePayload]
+                if let tools = object.tools {
+                    allowedTools = tools
+                } else if let legacyAllowedTools = object.legacyAllowedTools {
+                    allowedTools = legacyAllowedTools
+                } else {
+                    throw DecodingError.keyNotFound(
+                        ToolChoice.CodingKeys.tools,
+                        .init(
+                            codingPath: decoder.codingPath,
+                            debugDescription: "Expected `tools` (or legacy `allowed_tools`) in allowed_tools tool_choice."
+                        )
+                    )
+                }
+                let names = allowedTools.map(\.name)
+                let parsedMode = object.mode.flatMap(AllowedToolsMode.init(rawValue:))
+                self = .allowedTools(.init(mode: parsedMode, tools: names))
+            default:
+                throw DecodingError.dataCorruptedError(
+                    forKey: ToolChoice.CodingKeys.type,
+                    in: try decoder.container(keyedBy: ToolChoice.CodingKeys.self),
+                    debugDescription: "Unknown tool_choice.type: \(object.type)"
+                )
             }
         }
 
         public init(function: String) {
             self = .function(function)
+        }
+
+        public init(allowedTools: [String]) {
+            self = .allowedTools(.init(mode: nil, tools: allowedTools))
         }
 
         enum CodingKeys: String, CodingKey {
@@ -1112,13 +1209,67 @@ public struct ChatQuery: Equatable, Codable, Streamable, Sendable {
             case required = "required"
         }
 
-        private enum ChatCompletionFunctionCallNameParam: Codable, Equatable {
-            case type
-            case function
+        private struct FunctionNameParam: Codable, Equatable {
+            let name: String
+        }
 
-            enum CodingKeys: CodingKey {
+        private enum AllowedToolNamePayload: Codable, Equatable {
+            case name(String)
+            case functionTool(AllowedToolParam)
+
+            init(from decoder: Decoder) throws {
+                if let container = try? decoder.singleValueContainer(),
+                   let name = try? container.decode(String.self) {
+                    self = .name(name)
+                    return
+                }
+
+                self = .functionTool(try AllowedToolParam(from: decoder))
+            }
+
+            func encode(to encoder: Encoder) throws {
+                switch self {
+                case .name(let name):
+                    var container = encoder.singleValueContainer()
+                    try container.encode(name)
+                case .functionTool(let tool):
+                    try tool.encode(to: encoder)
+                }
+            }
+
+            var name: String {
+                switch self {
+                case .name(let name):
+                    return name
+                case .functionTool(let tool):
+                    return tool.function.name
+                }
+            }
+        }
+
+        private struct AllowedToolParam: Codable, Equatable {
+            let type: String
+            let function: FunctionNameParam
+
+            init(type: String = "function", name: String) {
+                self.type = type
+                self.function = .init(name: name)
+            }
+        }
+
+        private struct ToolChoice: Codable, Equatable {
+            let type: String
+            let function: FunctionNameParam?
+            let mode: String?
+            let tools: [AllowedToolNamePayload]?
+            let legacyAllowedTools: [AllowedToolNamePayload]?
+
+            enum CodingKeys: String, CodingKey {
                 case type
                 case function
+                case mode
+                case tools
+                case legacyAllowedTools = "allowed_tools"
             }
         }
     }

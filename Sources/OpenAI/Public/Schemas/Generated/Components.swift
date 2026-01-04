@@ -7266,7 +7266,7 @@ public enum Components {
             ///
             /// - Remark: Generated from `#/components/schemas/ResponseOutputTextAnnotationAddedEvent/type`.
             @frozen public enum _TypePayload: String, Codable, Hashable, Sendable, CaseIterable {
-                case response_outputTextAnnotation_added = "response.output_text_annotation.added"
+                case response_outputTextAnnotation_added = "response.output_text.annotation.added"
             }
             /// The type of the event. Always 'response.output_text_annotation.added'.
             ///

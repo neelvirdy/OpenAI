@@ -9769,8 +9769,8 @@ public enum Components {
             case functionTool(Components.Schemas.FunctionTool)
             /// - Remark: Generated from `#/components/schemas/Tool/FileSearchTool`.
             case fileSearchTool(Components.Schemas.FileSearchTool)
-            /// - Remark: Generated from `#/components/schemas/Tool/WebSearchPreviewTool`.
-            case webSearchPreviewTool(Components.Schemas.WebSearchPreviewTool)
+            /// - Remark: Generated from `#/components/schemas/Tool/WebSearchTool`.
+            case webSearchTool(Components.Schemas.WebSearchTool)
             /// - Remark: Generated from `#/components/schemas/Tool/ComputerUsePreviewTool`.
             case computerUsePreviewTool(Components.Schemas.ComputerUsePreviewTool)
             /// - Remark: Generated from `#/components/schemas/Tool/MCPTool`.
@@ -9795,8 +9795,8 @@ public enum Components {
                     self = .functionTool(try .init(from: decoder))
                 case "FileSearchTool", "#/components/schemas/FileSearchTool":
                     self = .fileSearchTool(try .init(from: decoder))
-                case "WebSearchPreviewTool", "#/components/schemas/WebSearchPreviewTool":
-                    self = .webSearchPreviewTool(try .init(from: decoder))
+                case "WebSearchTool", "#/components/schemas/WebSearchTool":
+                    self = .webSearchTool(try .init(from: decoder))
                 case "ComputerUsePreviewTool", "#/components/schemas/ComputerUsePreviewTool":
                     self = .computerUsePreviewTool(try .init(from: decoder))
                 case "MCPTool", "#/components/schemas/MCPTool":
@@ -9821,7 +9821,7 @@ public enum Components {
                     try value.encode(to: encoder)
                 case let .fileSearchTool(value):
                     try value.encode(to: encoder)
-                case let .webSearchPreviewTool(value):
+                case let .webSearchTool(value):
                     try value.encode(to: encoder)
                 case let .computerUsePreviewTool(value):
                     try value.encode(to: encoder)
@@ -11649,24 +11649,25 @@ public enum Components {
         }
         /// This tool searches the web for relevant results to use in a response. Learn more about the [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
         ///
-        /// - Remark: Generated from `#/components/schemas/WebSearchPreviewTool`.
-        public struct WebSearchPreviewTool: Codable, Hashable, Sendable {
-            /// The type of the web search tool. One of `web_search_preview` or `web_search_preview_2025_03_11`.
+        /// - Remark: Generated from `#/components/schemas/WebSearchTool`.
+        public struct WebSearchTool: Codable, Hashable, Sendable {
+            /// The type of the web search tool. One of `web_search`, `web_search_preview` or `web_search_preview_2025_03_11`.
             ///
-            /// - Remark: Generated from `#/components/schemas/WebSearchPreviewTool/type`.
+            /// - Remark: Generated from `#/components/schemas/WebSearchTool/type`.
             @frozen public enum _TypePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case webSearch = "web_search"
                 case webSearchPreview = "web_search_preview"
                 case webSearchPreview20250311 = "web_search_preview_2025_03_11"
             }
-            /// The type of the web search tool. One of `web_search_preview` or `web_search_preview_2025_03_11`.
+            /// The type of the web search tool. One of `web_search`, `web_search_preview` or `web_search_preview_2025_03_11`.
             ///
-            /// - Remark: Generated from `#/components/schemas/WebSearchPreviewTool/type`.
-            public var _type: Components.Schemas.WebSearchPreviewTool._TypePayload
-            /// - Remark: Generated from `#/components/schemas/WebSearchPreviewTool/user_location`.
+            /// - Remark: Generated from `#/components/schemas/WebSearchTool/type`.
+            public var _type: Components.Schemas.WebSearchTool._TypePayload
+            /// - Remark: Generated from `#/components/schemas/WebSearchTool/user_location`.
             public struct UserLocationPayload: Codable, Hashable, Sendable {
-                /// - Remark: Generated from `#/components/schemas/WebSearchPreviewTool/user_location/value1`.
+                /// - Remark: Generated from `#/components/schemas/WebSearchTool/user_location/value1`.
                 public var value1: Components.Schemas.ApproximateLocation?
-                /// - Remark: Generated from `#/components/schemas/WebSearchPreviewTool/user_location/value2`.
+                /// - Remark: Generated from `#/components/schemas/WebSearchTool/user_location/value2`.
                 public var value2: OpenAPIRuntime.OpenAPIValueContainer?
                 /// Creates a new `UserLocationPayload`.
                 ///
@@ -11707,11 +11708,11 @@ public enum Components {
                     try self.value2?.encode(to: encoder)
                 }
             }
-            /// - Remark: Generated from `#/components/schemas/WebSearchPreviewTool/user_location`.
-            public var userLocation: Components.Schemas.WebSearchPreviewTool.UserLocationPayload?
+            /// - Remark: Generated from `#/components/schemas/WebSearchTool/user_location`.
+            public var userLocation: Components.Schemas.WebSearchTool.UserLocationPayload?
             /// High level guidance for the amount of context window space to use for the search. One of `low`, `medium`, or `high`. `medium` is the default.
             ///
-            /// - Remark: Generated from `#/components/schemas/WebSearchPreviewTool/search_context_size`.
+            /// - Remark: Generated from `#/components/schemas/WebSearchTool/search_context_size`.
             @frozen public enum SearchContextSizePayload: String, Codable, Hashable, Sendable, CaseIterable {
                 case low = "low"
                 case medium = "medium"
@@ -11719,18 +11720,18 @@ public enum Components {
             }
             /// High level guidance for the amount of context window space to use for the search. One of `low`, `medium`, or `high`. `medium` is the default.
             ///
-            /// - Remark: Generated from `#/components/schemas/WebSearchPreviewTool/search_context_size`.
-            public var searchContextSize: Components.Schemas.WebSearchPreviewTool.SearchContextSizePayload?
-            /// Creates a new `WebSearchPreviewTool`.
+            /// - Remark: Generated from `#/components/schemas/WebSearchTool/search_context_size`.
+            public var searchContextSize: Components.Schemas.WebSearchTool.SearchContextSizePayload?
+            /// Creates a new `WebSearchTool`.
             ///
             /// - Parameters:
-            ///   - _type: The type of the web search tool. One of `web_search_preview` or `web_search_preview_2025_03_11`.
+            ///   - _type: The type of the web search tool. One of `web_search`, `web_search_preview` or `web_search_preview_2025_03_11`.
             ///   - userLocation:
             ///   - searchContextSize: High level guidance for the amount of context window space to use for the search. One of `low`, `medium`, or `high`. `medium` is the default.
             public init(
-                _type: Components.Schemas.WebSearchPreviewTool._TypePayload,
-                userLocation: Components.Schemas.WebSearchPreviewTool.UserLocationPayload? = nil,
-                searchContextSize: Components.Schemas.WebSearchPreviewTool.SearchContextSizePayload? = nil
+                _type: Components.Schemas.WebSearchTool._TypePayload,
+                userLocation: Components.Schemas.WebSearchTool.UserLocationPayload? = nil,
+                searchContextSize: Components.Schemas.WebSearchTool.SearchContextSizePayload? = nil
             ) {
                 self._type = _type
                 self.userLocation = userLocation

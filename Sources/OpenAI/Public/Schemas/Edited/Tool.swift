@@ -23,7 +23,7 @@
     case computerTool(Schemas.ComputerUsePreviewTool)
     /// This tool searches the web for relevant results to use in a response.
     /// Learn more about the [web search tool](/docs/guides/tools-web-search).
-    case webSearchTool(Schemas.WebSearchPreviewTool)
+    case webSearchTool(Schemas.WebSearchTool)
     /// Give the model access to additional tools via remote Model Context Protocol (MCP) servers.
     /// [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp)
     case mcpTool(Schemas.MCPTool)

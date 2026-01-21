@@ -24,7 +24,10 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
     /// Model ID used to generate the response, like `gpt-4o` or `o1`. OpenAI offers a wide range of models with different capabilities, performance characteristics, and price points.
     /// Refer to the [model guide](https://platform.openai.com/docs/models) to browse and compare available models.
     public let model: String
-    
+
+    /// An optional key to use for prompt caching.
+    public let promptCacheKey: String?
+
     /// Specify additional output data to include in the model response.
     ///
     /// Currently supported values are:
@@ -129,6 +132,7 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
     public init(
         input: Input,
         model: String,
+        promptCacheKey: String? = nil,
         include: [Schemas.Includable]? = nil,
         background: Bool? = nil,
         instructions: String? = nil,
@@ -151,6 +155,7 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
     ) {
         self.input = input
         self.model = model
+        self.promptCacheKey = promptCacheKey
         self.include = include
         self.background = background
         self.instructions = instructions
@@ -175,6 +180,7 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case input
         case model
+        case promptCacheKey = "prompt_cache_key"
         case include
         case background
         case instructions

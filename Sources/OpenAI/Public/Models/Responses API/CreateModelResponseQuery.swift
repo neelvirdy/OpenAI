@@ -25,9 +25,6 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
     /// Refer to the [model guide](https://platform.openai.com/docs/models) to browse and compare available models.
     public let model: String
 
-    /// An optional key to use for prompt caching.
-    public let promptCacheKey: String?
-
     /// Specify additional output data to include in the model response.
     ///
     /// Currently supported values are:
@@ -66,7 +63,10 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
     
     /// Reference to a prompt template and its variables. [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
     public let prompt: Schemas.Prompt?
-    
+
+    /// An optional key to use for prompt caching.
+    public let promptCacheKey: String?
+
     /// **o-series models only**
     ///
     /// Configuration options for [reasoning models](https://platform.openai.com/docs/guides/reasoning).
@@ -132,7 +132,6 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
     public init(
         input: Input,
         model: String,
-        promptCacheKey: String? = nil,
         include: [Schemas.Includable]? = nil,
         background: Bool? = nil,
         instructions: String? = nil,
@@ -141,6 +140,7 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
         parallelToolCalls: Bool? = nil,
         previousResponseId: String? = nil,
         prompt: Schemas.Prompt? = nil,
+        promptCacheKey: String? = nil,
         reasoning: Schemas.Reasoning? = nil,
         serviceTier: ServiceTier? = nil,
         store: Bool? = nil,
@@ -155,7 +155,6 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
     ) {
         self.input = input
         self.model = model
-        self.promptCacheKey = promptCacheKey
         self.include = include
         self.background = background
         self.instructions = instructions
@@ -164,6 +163,7 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
         self.parallelToolCalls = parallelToolCalls
         self.previousResponseId = previousResponseId
         self.prompt = prompt
+        self.promptCacheKey = promptCacheKey
         self.reasoning = reasoning
         self.serviceTier = serviceTier
         self.store = store
@@ -180,7 +180,6 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case input
         case model
-        case promptCacheKey = "prompt_cache_key"
         case include
         case background
         case instructions
@@ -189,6 +188,7 @@ public struct CreateModelResponseQuery: Codable, Equatable, Sendable {
         case parallelToolCalls = "parallel_tool_calls"
         case previousResponseId = "previous_response_id"
         case prompt
+        case promptCacheKey = "prompt_cache_key"
         case reasoning
         case serviceTier = "service_tier"
         case store
